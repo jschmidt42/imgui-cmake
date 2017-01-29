@@ -1,53 +1,84 @@
 cmake_minimum_required(VERSION 3.6)
 project(imgui)
 
-set(inst_src_dir include/imgui_src)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(CMakeSettings)
+
+set(CMAKE_C_FLAGS)
+set(CMAKE_CXX_FLAGS)
+set(CMAKE_C_FLAGS_DEBUG "-D_DEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG")
+set(CMAKE_C_FLAGS_RELEASE "-DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
+
+# Setup platforms
+if( PLATFORM_WINDOWS )
+	add_compile_options(-DWINDOWSPC)
+elseif( PLATFORM_OSX )
+	add_compile_options(-DMACOSX)
+elseif( PLATFORM_IOS )
+	add_compile_options(-DIOS -DUSE_IOS_GLES3 -DUSE_GL_RENDER_BUFFER)
+elseif( PLATFORM_ANDROID )
+	add_compile_options(-DANDROID -DCORELIB=1 -DPXD_DISABLE_PPU=1 -DLINUX)
+	if( ENGINE_ANDROID_GLES3 )
+		add_compile_options(-DUSE_ANDROID_GLES3)
+	endif()
+	if( ENGINE_ANDROID_GLES3_GLSL100 )
+		add_compile_options(-DUSE_ANDROID_GLES3_GLSL100)
+	endif()
+	if( ENGINE_ANDROID_GL4 )
+		add_compile_options(-DUSE_ANDROID_GL4)
+	endif()
+elseif( PLATFORM_XBOXONE )
+	if( NOT (EXISTS "${PROJECT_SOURCE_DIR}/platforms/xb1" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/platforms/xb1") )
+		message(FATAL_ERROR "Could not find XBoxOne engine source directory, cannot continue.")
+	endif()
+	add_compile_options(-DXBOXONE $<$<NOT:$<CONFIG:RELEASE>>:-DUSE_PIX>)
+elseif( PLATFORM_PS4 )
+	if( NOT (EXISTS "${PROJECT_SOURCE_DIR}/platforms/ps4" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/platforms/ps4") )
+		message(FATAL_ERROR "Could not find PlayStation4 engine source directory, cannot continue.")
+	endif()
+	add_definitions(-DPS4)	# Patch for PS4: Scaleform use a namespace named 'PS4', and it conflicts with the define 'PS4'. Using add_definitions allow us to remove it later.
+	add_compile_options(-D__ORBIS__ -DX64 -D__SSE3__)
+elseif( PLATFORM_WEBGL )
+	add_compile_options(-DWEBGL -DSINGLE_THREAD)
+	if( ENGINE_USE_WEBGL_SIMD )
+		add_compile_options(-DUSE_WEBGL_SIMD)
+	endif()
+elseif( PLATFORM_WINUWP )
+	add_compile_options(-DWINUWP -DWINAPI_PARTITION_APP=1)
+elseif( PLATFORM_LINUX )
+	add_compile_options(-DLINUXPC)
+endif()
+
+# Define standard configurations
+if( CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_CONFIGURATION_TYPES MATCHES "Debug;Dev;Release" )
+	list(APPEND Configs Debug Dev Release)
+	set(CMAKE_CONFIGURATION_TYPES ${Configs} CACHE STRING "List of supported configurations." FORCE)
+	set(CMAKE_INSTALL_PREFIX $ENV{SR_BIN_DIR} CACHE STRING "Default installation directory." FORCE)
+	message(FATAL_ERROR "Default configuration was reset, please re-run CMake.")
+endif()
+
+# Initialize the development configuration using release configuration
+set(CMAKE_C_FLAGS_DEV "${CMAKE_C_FLAGS_RELEASE}")
+set(CMAKE_CXX_FLAGS_DEV "${CMAKE_CXX_FLAGS_RELEASE}")
+set(CMAKE_STATIC_LINKER_FLAGS_DEV "${CMAKE_STATIC_LINKER_FLAGS_RELEASE}")
+set(CMAKE_SHARED_LINKER_FLAGS_DEV "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
+set(CMAKE_MODULE_LINKER_FLAGS_DEV "${CMAKE_MODULE_LINKER_FLAGS_RELEASE}")
+set(CMAKE_EXE_LINKER_FLAGS_DEV "${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
+
+# Get the current working branch and latest commit hash and generate build identifier header file
+determine_build_revision("${PROJECT_SOURCE_DIR}" ENGINE_BUILD_IDENTIFIER)
+if( ENGINE_BUILD_IDENTIFIER )
+	execute_process(COMMAND git rev-parse --abbrev-ref HEAD WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE ENGINE_BUILD_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+configure_file("${PROJECT_SOURCE_DIR}/build_identifier.h.in" "${PROJECT_BINARY_DIR}/build_identifier.h")
 
 set(root ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
-set(phdrs ${root}/imgui.h)
-set(hdrs ${root}/stb_rect_pack.h ${root}/stb_textedit.h ${root}/stb_truetype.h)
-set(srcs ${root}/imgui.cpp)
-set(inst_srcs ${inst_src_dir}/imgui.cpp)
-
-add_library(imgui INTERFACE)
-
-if(CMAKE_VERSION VERSION_LESS 3.3)
-    message(WARNING "The config-module created by your CMake version (< 3.3) "
-        "can't attach the imgui source files to the exported library. Please see the "
-        "documentation in `README.md` for further instructions.")
-else()
-    target_sources(imgui INTERFACE
-        $<BUILD_INTERFACE:${srcs}>
-        $<INSTALL_INTERFACE:${inst_srcs}>)
-endif()
-
-set(IMGUI_SOURCES ${srcs})
-
-install(FILES ${srcs} ${hdrs} DESTINATION ${inst_src_dir})
-
-target_include_directories(imgui INTERFACE
-    $<BUILD_INTERFACE:${root}>
-    $<INSTALL_INTERFACE:include>)
-
-target_compile_definitions(imgui INTERFACE IMGUI_DISABLE_INCLUDE_IMCONFIG_H)
-
-install(TARGETS imgui EXPORT imgui-targets DESTINATION lib)
-
-install(EXPORT imgui-targets
-    DESTINATION lib/cmake/imgui)
-
-install(FILES ${phdrs} DESTINATION include)
-install(FILES ${root}/imconfig.h DESTINATION include RENAME imconfig-sample.h)
-
-# create config-module
-
-set(cm ${CMAKE_CURRENT_BINARY_DIR}/hide/imgui-config.cmake)
-
-file(WRITE ${cm} "include(\${CMAKE_CURRENT_LIST_DIR}/imgui-targets.cmake)\n")
-
-if(CMAKE_VERSION VERSION_LESS 3.3)
-    file(APPEND ${cm}
-        "get_filename_component(IMGUI_SOURCES \"\${CMAKE_CURRENT_LIST_DIR}/../../../include/imgui_src/imgui.cpp\" ABSOLUTE)\n")
-endif()
-
-install(FILES ${cm} DESTINATION lib/cmake/imgui)
+set(ALL_SOURCE_FILES
+	${root}/stb_rect_pack.h ${root}/stb_textedit.h ${root}/stb_truetype.h
+	${root}/imgui.h ${root}/imgui_internal.h ${root}/imgui.cpp
+	${root}/imgui_draw.cpp ${root}/imgui_demo.cpp)
+add_library(${PROJECT_NAME} STATIC ${ALL_SOURCE_FILES})
+set_system_properties(${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "${ENGINE_FOLDER_NAME}")
