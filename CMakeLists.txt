@@ -75,12 +75,14 @@ endif()
 configure_file("${PROJECT_SOURCE_DIR}/build_identifier.h.in" "${PROJECT_BINARY_DIR}/build_identifier.h")
 
 set(root ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+set(INCLUDE_FILES ${root}/imgui.h ${root}/imgui_internal.h)
 set(ALL_SOURCE_FILES
 	${root}/stb_rect_pack.h ${root}/stb_textedit.h ${root}/stb_truetype.h
-	${root}/imgui.h ${root}/imgui_internal.h ${root}/imgui.cpp
+	${INCLUDE_FILES} ${root}/imgui.cpp
 	${root}/imgui_draw.cpp ${root}/imgui_demo.cpp)
 add_library(${PROJECT_NAME} STATIC ${ALL_SOURCE_FILES})
 set_system_properties(${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "${ENGINE_FOLDER_NAME}")
 
 install(TARGETS imgui EXPORT imgui-targets DESTINATION lib)
+install(FILES ${INCLUDE_FILES} DESTINATION include)
