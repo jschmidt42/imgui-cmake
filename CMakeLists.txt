@@ -37,5 +37,15 @@ set(ALL_SOURCE_FILES
 	${root}/imgui_draw.cpp ${root}/imgui_demo.cpp)
 add_library(${PROJECT_NAME} STATIC ${ALL_SOURCE_FILES})
 
-install(TARGETS imgui EXPORT imgui-targets DESTINATION lib)
+target_sources(${PROJECT_NAME} INTERFACE
+        $<BUILD_INTERFACE:${ALL_SOURCE_FILES}>
+        $<INSTALL_INTERFACE:${ALL_SOURCE_FILES}>)
+
+target_include_directories(${PROJECT_NAME} INTERFACE
+    $<BUILD_INTERFACE:${root}>
+    $<INSTALL_INTERFACE:include>)
+
+target_compile_definitions(${PROJECT_NAME} INTERFACE IMGUI_DISABLE_INCLUDE_IMCONFIG_H)
+
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets DESTINATION lib)
 install(FILES ${INCLUDE_FILES} DESTINATION include)
