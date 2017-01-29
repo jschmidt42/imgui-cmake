@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.6)
+
+set(CMAKE_CONFIGURATION_TYPES "Debug;Dev;Release"
+    CACHE STRING
+    "List of supported configurations."
+    FORCE)
+
 project(imgui)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
