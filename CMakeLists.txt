@@ -43,9 +43,6 @@ set(ALL_SOURCE_FILES
 	${root}/stb_rect_pack.h ${root}/stb_textedit.h ${root}/stb_truetype.h
 	${INCLUDE_FILES} ${root}/imgui_internal.h ${root}/imgui.cpp
 	${root}/imgui_draw.cpp ${root}/imgui_demo.cpp)
-
-replace_linker_flags("/NODEFAULTLIB:\"MSVCRT.lib\"" "")
-
 add_library(${PROJECT_NAME} STATIC ${ALL_SOURCE_FILES})
 
 export(TARGETS ${PROJECT_NAME}
