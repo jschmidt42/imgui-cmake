@@ -82,3 +82,5 @@ set(ALL_SOURCE_FILES
 add_library(${PROJECT_NAME} STATIC ${ALL_SOURCE_FILES})
 set_system_properties(${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "${ENGINE_FOLDER_NAME}")
+
+install(TARGETS imgui EXPORT imgui-targets DESTINATION lib)
