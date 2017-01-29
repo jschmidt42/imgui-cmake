@@ -35,8 +35,6 @@ set(CMAKE_C_FLAGS_DEV "${CMAKE_C_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_DEV "${CMAKE_CXX_FLAGS_RELEASE}")
 set(CMAKE_STATIC_LINKER_FLAGS_DEV "${CMAKE_STATIC_LINKER_FLAGS_RELEASE}")
 
-#add_definitions("-DIMGUI_API=__declspec(dllexport)")
-
 set(root ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
 set(INCLUDE_FILES ${root}/imgui.h ${CMAKE_CURRENT_SOURCE_DIR}/export/imconfig.h)
 set(ALL_SOURCE_FILES
@@ -44,12 +42,12 @@ set(ALL_SOURCE_FILES
 	${INCLUDE_FILES} ${root}/imgui_internal.h ${root}/imgui.cpp
 	${root}/imgui_draw.cpp ${root}/imgui_demo.cpp)
 
-replace_linker_flags("/NODEFAULTLIB:\"MSVCRT.lib\"" "")
+#replace_linker_flags("/NODEFAULTLIB:\"MSVCRT.lib\"" "")
 
 add_library(${PROJECT_NAME} STATIC ${ALL_SOURCE_FILES})
 
 export(TARGETS ${PROJECT_NAME}
        APPEND FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}-targets.cmake)
 
-install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets DESTINATION lib)
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-targets DESTINATION lib/$<LOWER_CASE:$<CONFIG>>)
 install(FILES ${INCLUDE_FILES} DESTINATION include)
