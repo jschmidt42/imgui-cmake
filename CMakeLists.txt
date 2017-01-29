@@ -35,8 +35,10 @@ set(CMAKE_C_FLAGS_DEV "${CMAKE_C_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_DEV "${CMAKE_CXX_FLAGS_RELEASE}")
 set(CMAKE_STATIC_LINKER_FLAGS_DEV "${CMAKE_STATIC_LINKER_FLAGS_RELEASE}")
 
+add_definitions("-DIMGUI_API=__declspec(dllexport)"")
+
 set(root ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
-set(INCLUDE_FILES ${root}/imgui.h ${root}/imconfig.h)
+set(INCLUDE_FILES ${root}/imgui.h ${CMAKE_CURRENT_SOURCE_DIR}/export/imconfig.h)
 set(ALL_SOURCE_FILES
 	${root}/stb_rect_pack.h ${root}/stb_textedit.h ${root}/stb_truetype.h
 	${INCLUDE_FILES} ${root}/imgui_internal.h ${root}/imgui.cpp
