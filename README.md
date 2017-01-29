@@ -1,7 +1,7 @@
 Stingray CMake support for ImGui
 ================================
 
-# Generate solution and Build
+### Generate solution and Build
 
 1. Create CMake build folder
 > mkdir build && cd build
