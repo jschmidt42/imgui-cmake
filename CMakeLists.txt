@@ -36,10 +36,10 @@ set(CMAKE_CXX_FLAGS_DEV "${CMAKE_CXX_FLAGS_RELEASE}")
 set(CMAKE_STATIC_LINKER_FLAGS_DEV "${CMAKE_STATIC_LINKER_FLAGS_RELEASE}")
 
 set(root ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
-set(INCLUDE_FILES ${root}/imgui.h ${root}/imgui_internal.h)
+set(INCLUDE_FILES ${root}/imgui.h ${root}/imconfig.h)
 set(ALL_SOURCE_FILES
 	${root}/stb_rect_pack.h ${root}/stb_textedit.h ${root}/stb_truetype.h
-	${INCLUDE_FILES} ${root}/imgui.cpp
+	${INCLUDE_FILES} ${root}/imgui_internal.h ${root}/imgui.cpp
 	${root}/imgui_draw.cpp ${root}/imgui_demo.cpp)
 add_library(${PROJECT_NAME} STATIC ${ALL_SOURCE_FILES})
 
